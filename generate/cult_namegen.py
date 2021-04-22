@@ -91,7 +91,6 @@ class NameGenModel2(Model):
 
         lengths = (token_ids > 0).sum(axis=1)
         combined_input = nn.utils.rnn.pack_padded_sequence(combined_input, lengths, batch_first=True, enforce_sorted=False )
-        
         # pass through LSTM
         lstm_out, hidden = self.lstm(combined_input, hidden)
 

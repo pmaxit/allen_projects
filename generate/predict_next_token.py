@@ -23,7 +23,7 @@ class NamePredictor(Predictor):
     def predict_json(self, inputs: JsonDict)-> JsonDict:
         culture = inputs['culture']
         tokens = self._dataset_reader._tokenizer.tokenize(inputs['name'])
-        instance = self._dataset_reader.text_to_instance(culture=culture, tokens=[Token('SOS')])
+        instance = self._dataset_reader.text_to_instance(culture=culture, tokens=[Token('SOS'), Token('EOS')])
         return self.predict_instance(instance)
 
 
@@ -33,7 +33,7 @@ class NamePredictor(Predictor):
         predict_len = 10
         hidden_state = self._model.init_hidden(batch_size = 1)
 
-        predicted_str = ''.join([t.text for t in instance.fields['tokens'].tokens[1:-1]])
+        predicted_str = ''.join([t.text for t in instance.fields['inputs'].tokens[1:-1]])
         for _ in range(predict_len):
             self._dataset_reader.apply_token_indexers(instance)
 
@@ -43,13 +43,15 @@ class NamePredictor(Predictor):
             outputs = self._model.forward(hidden=hidden_state, **dataset.as_tensor_dict())
 
             # get the logits
-            logits = F.log_softmax(outputs['next_token_prob'])
+            logits = F.log_softmax(outputs['next_token_prob'],dim=-1)
             hidden_state = outputs['hidden']
             
             output_dist = logits.data.view(-1).div(self.temperature).exp()
             top_char = torch.multinomial(output_dist, 1)[0]
 
-            if top_char in [0, 1,2,3 ]:
+            sos_idx = self._model.vocab.get_token_index('SOS')
+            eos_idx = self._model.vocab.get_token_index('EOS')
+            if top_char in [0, 1, sos_idx, eos_idx]:
                 break
             
             top_char = top_char.item()
@@ -64,8 +66,8 @@ class NamePredictor(Predictor):
             #current_tokens.append(Token(predicted_char))
 
             # new instance with only predicted token
-            instance = Instance({'tokens': TextField([Token(predicted_char)]), 
+            instance = Instance({'inputs': TextField([Token(predicted_char)]),
+                    'targets' : TextField([Token(predicted_char)]),
                     'culture': instance.fields['culture']})
-
         
         return sanitize({'prediction': predicted_str})
