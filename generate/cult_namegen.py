@@ -120,10 +120,13 @@ class NameGenModel2(Model):
             if isinstance(m, nn.Linear):
                 nn.init.xavier_uniform_(m.weight.data, gain=nn.init.calculate_gain('relu'))
 
-    def init_hidden(self, batch_size):
+    def init_hidden(self, batch_size, dev=None):
+        if dev is not None:
+            device = dev
+        
         h = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device)
         c = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(device)
-
+        
         return (h,c)
     
 

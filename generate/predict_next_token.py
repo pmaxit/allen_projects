@@ -31,7 +31,7 @@ class NamePredictor(Predictor):
         label_vocab = self._model.vocab.get_index_to_token_vocabulary('tokens')
 
         predict_len = 10
-        hidden_state = self._model.init_hidden(batch_size = 1)
+        hidden_state = self._model.init_hidden(batch_size = 1, device=torch.device('cpu'))
 
         predicted_str = ''.join([t.text for t in instance.fields['inputs'].tokens[1:-1]])
         for _ in range(predict_len):
