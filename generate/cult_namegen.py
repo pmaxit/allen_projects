@@ -89,7 +89,7 @@ class NameGenModel2(Model):
         combined_input = torch.cat([car_embeddings, cat_embeds], 2)
         # calculate lengths
 
-        lengths = (token_ids > 0).sum(axis=1)
+        lengths = (token_ids > 0).sum(axis=1).cpu()
         combined_input = nn.utils.rnn.pack_padded_sequence(combined_input, lengths, batch_first=True, enforce_sorted=False )
         # pass through LSTM
         lstm_out, hidden = self.lstm(combined_input, hidden)
@@ -121,6 +121,7 @@ class NameGenModel2(Model):
                 nn.init.xavier_uniform_(m.weight.data, gain=nn.init.calculate_gain('relu'))
 
     def init_hidden(self, batch_size, dev=None):
+        global device
         if dev is not None:
             device = dev
         

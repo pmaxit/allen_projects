@@ -23,7 +23,7 @@ class NamePredictor(Predictor):
     def predict_json(self, inputs: JsonDict)-> JsonDict:
         culture = inputs['culture']
         tokens = self._dataset_reader._tokenizer.tokenize(inputs['name'])
-        instance = self._dataset_reader.text_to_instance(culture=culture, tokens=[Token('SOS'), Token('EOS')])
+        instance = self._dataset_reader.text_to_instance(culture=culture, tokens=tokens)
         return self.predict_instance(instance)
 
 
